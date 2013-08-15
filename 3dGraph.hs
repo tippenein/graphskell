@@ -22,7 +22,7 @@ type Edge = (Vertex, Vertex)
 
 newtype Graph = Graph {grNeighs :: Map Vertex (Set Vertex)}
 
-emptyGraph :: Graphic
+emptyGraph :: Graph
 emptyGraph = Graph Map.empty
 
 addVertex :: Vertex -> Graph -> Graph
@@ -34,9 +34,9 @@ addVertex v (Graph neighs) =
 addEdge :: Edge -> Graph -> Graph
 addEdge (v1, v2) gr = Graph neighs
   where
-    gr'    = addVertex c1 (addVertex v2 gr)
-    neighs = Map.insert v1 (set.insert v2 (vertexNeighs v1 gr')) $
-             Map.insert v2 (set.insert v1 (vertexNeighs v2 gr')) $
+    gr'    = addVertex v1 (addVertex v2 gr)
+    neighs = Map.insert v1 (Set.insert v2 (vertexNeighs v1 gr')) $
+             Map.insert v2 (Set.insert v1 (vertexNeighs v2 gr')) $
              grNeighs gr'
 
 vertexNeighs :: Vertex -> Graph -> Set Vertex
@@ -65,7 +65,7 @@ emptyScene =
           , scViewState= viewStateInit }
 
 scAddVertex :: Vertex -> Point -> Scene -> Scene
-scAddVertex c pt sc@Scene{scGraph = gr, scPoints = pts } =
+scAddVertex v pt sc@Scene{scGraph = gr, scPoints = pts } =
     sc{scGraph = addVertex v gr, scPoints = Map.insert v pt pts }
 
 scAddEdge :: Edge -> Scene -> Scene
@@ -187,7 +187,7 @@ handleEvent ev sc =
 windowSize :: (Int, Int)
 windowSize = (640, 480)
 
-fromEdges :: StdGen -[Edge] -Scene
+fromEdges :: StdGen -> [Edge] -> Scene
 fromEdges gen es =
     foldr scAddEdge (fst (Set.foldr' addv (emptyScene, gen) vs)) es
   where
@@ -201,7 +201,7 @@ fromEdges gen es =
             (y, gen3) = randomR (-halfHeight, halfHeight) gen2
         in  (scAddVertex v (x, y) sc, gen3)
 
-sceneWindow :: Scene -IO ()
+sceneWindow :: Scene -> IO ()
 sceneWindow sc =
     play (InWindow "Graph Drawing - ctrl + left mouse button to drag" windowSize (10, 10))
          black 30 sc drawScene handleEvent updatePositions
@@ -225,5 +225,6 @@ sampleGraph =
     ]
 
 main :: IO ()
+main = 
     do gen <- getStdGen
        sceneWindow (fromEdges gen sampleGraph)
