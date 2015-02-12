@@ -27,7 +27,7 @@ emptyGraph = Graph Map.empty
 
 addVertex :: Vertex -> Graph -> Graph
 addVertex v (Graph neighs) =
-    Graph $ case Map.lookup v neighs of 
+    Graph $ case Map.lookup v neighs of
                 Nothing -> Map.insert v Set.empty neighs
                 Just _  -> neighs
 
@@ -46,7 +46,7 @@ graphEdges :: Graph -> Set Edge
 graphEdges = Map.foldrWithKey' foldNeighs Set.empty . grNeighs
   where
     -- for each vertex v1, insert an edge for each neighbor v2
-    foldNeighs v1 ns es = 
+    foldNeighs v1 ns es =
         Set.foldr' (\v2 -> Set.insert (order (v1, v2))) es ns
     order (v1, v2) = if v1 > v2 then (v1, v2) else (v2, v1)
 
@@ -58,7 +58,7 @@ data Scene =
           , scViewState :: ViewState }
 
 emptyScene :: Scene
-emptyScene = 
+emptyScene =
     Scene { scGraph    = emptyGraph
           , scPoints   = Map.empty
           , scSelected = Nothing
@@ -69,7 +69,7 @@ scAddVertex v pt sc@Scene{scGraph = gr, scPoints = pts } =
     sc{scGraph = addVertex v gr, scPoints = Map.insert v pt pts }
 
 scAddEdge :: Edge -> Scene -> Scene
-scAddEdge e@(v1, v2) sc@Scene{scGraph = gr, scPoints = pts} = 
+scAddEdge e@(v1, v2) sc@Scene{scGraph = gr, scPoints = pts} =
     if Map.member v1 pts && Map.member v2 pts
     then sc{scGraph = addEdge e gr}
     else error "scAddEdge: non-existent point"
@@ -97,7 +97,7 @@ drawEdge (v1, v2) sc = Line [vertexPos v1 sc, vertexPos v2 sc]
 
 -- apply ViewPort and ViewState to the Picture
 drawScene :: Scene -> Picture
-drawScene sc@Scene{scGraph = gr, scViewState = ViewState{viewStateViewPort = port}} = 
+drawScene sc@Scene{scGraph = gr, scViewState = ViewState{viewStateViewPort = port}} =
     applyViewPortToPicture port $
     Pictures [Color vertexColor vertices, Color edgeColor edges]
   where
@@ -141,7 +141,7 @@ updatePosition dt v1 sc@Scene{scPoints = pts, scGraph = gr} =
 
     -- sum all the forces
     push = Map.foldr' (\v2pos -> (getVel pushForce v2pos +)) 0 pts
-    pull = foldr (\v2pos -> (getVel pullForce v2pos +)) 0 
+    pull = foldr (\v2pos -> (getVel pullForce v2pos +)) 0
                  [vertexPos v2 sc | v2 <- Set.toList (vertexNeighs v1 gr)]
 
 updatePositions :: Float -> Scene -> Scene
@@ -157,7 +157,7 @@ inCircle p sca v = magV (v - p) <= vertexRadius * sca
 
 findVertex :: Point -> Float -> Scene -> Maybe Vertex
 findVertex p1 sca Scene{scPoints = pts} = Map.foldrWithKey' f Nothing pts
-  where 
+  where
     f _ _ (Just v) = Just v
     f v p2 Nothing = if inCircle p1 sca p2 then Just v else Nothing
 
@@ -181,7 +181,7 @@ handleEvent (EventMotion pos) sc@Scene{scPoints = pts, scSelected = Just v} =
     port = viewStateViewPort (scViewState sc)
 
 -- other events (panning zooming, etc)
-handleEvent ev sc = 
+handleEvent ev sc =
   sc{scViewState = updateViewStateWithEvent ev (scViewState sc)}
 
 windowSize :: (Int, Int)
@@ -225,6 +225,6 @@ sampleGraph =
     ]
 
 main :: IO ()
-main = 
+main =
     do gen <- getStdGen
        sceneWindow (fromEdges gen sampleGraph)
